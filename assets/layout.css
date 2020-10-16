@@ -1,0 +1,22 @@
+body {
+
+    background-color: #000033; 
+    color: black
+
+}
+
+#plot_content{
+    background-color: orange;
+}
+
+/* Styling tabs layout */
+#Dashboard_Tab{
+
+    background-color: orange;
+}
+
+#Portfolio_Tab{
+
+    background-color: orange;
+}
+
