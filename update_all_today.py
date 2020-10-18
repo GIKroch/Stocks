@@ -3,6 +3,9 @@ import pandas_datareader.data as web
 from datetime import datetime, timedelta
 import sqlite3
 
+## The idea is to create a few tables with measures, once the data is updated. In such a way, we avoid calculating the same measure values many times in application 
+import measures
+
 
 def get_data(ticker, market, start, end, conn):
     
@@ -58,6 +61,39 @@ def update_data():
                 print("ERROR", ticker)
                 pass
     else:
+        print("It's a free day")
         pass
 
+def calculate_measures():
+
+    print("Calculate measures is running")
+
+    conn = sqlite3.connect("stocks.db")
+
+    df_measures = measures.create_data(90, conn)
+
+    ## MA_BUY data
+    df_measures_extracted = measures.buy_sell_ma_rule(df_measures, "BUY")
+    # df_measures_extracted = df_measures_extracted.loc[:,['ticker', 'date', 'adjusted', 'pct_change']]
+    df_measures_extracted.to_sql('ma_buy', conn, if_exists='replace')
+
+    ## MA_SELL data
+    df_measures_extracted = measures.buy_sell_ma_rule(df_measures, "SELL")
+    # df_measures_extracted = df_measures_extracted.loc[:,['ticker', 'date', 'adjusted', 'pct_change']]
+    df_measures_extracted.to_sql('ma_sell', conn, if_exists='replace')
+
+    ## MAX_PCT_CHANGE
+    df_measures_extracted = df_measures.loc[df_measures['date'] == df_measures['date'].max()].copy()
+    df_measures_extracted.sort_values("pct_change", ascending = False, inplace = True)
+    df_measures_extracted.to_sql('max_pct_change', conn, if_exists='replace')
+
+    ## MIN PRICE 7 days
+    df_measures_extracted = measures.lowest_price_in_ndays(df_measures, 7)
+    df_measures_extracted.to_sql('min_price_7', conn, if_exists='replace')
+
+    ## MIN PRICE 4 days
+    df_measures_extracted = measures.lowest_price_in_ndays(df_measures, 4)
+    df_measures_extracted.to_sql('min_price_4', conn, if_exists='replace')
+
 update_data()
+calculate_measures()
