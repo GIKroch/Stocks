@@ -29,6 +29,7 @@ c = conn.cursor()
 ################################ Tickers 
 all_tickers = list(c.execute("SELECT DISTINCT ticker FROM stocks"))
 all_tickers = [ticker[0] for ticker in all_tickers]
+all_tickers.sort()
 
 nasdaq_tickers = list(c.execute("SELECT DISTINCT ticker FROM stocks WHERE market = 'NASDAQ'"))
 nasdaq_tickers = [ticker[0] for ticker in nasdaq_tickers]
@@ -78,7 +79,8 @@ app.layout = html.Div([
 def render_content(tab):
     if tab == 'tab-1':
         return html.Div([
-                        dcc.Dropdown(
+                        html.Div([
+                            dcc.Dropdown(
                             id = "Market", 
                             options = [
                                 {'label':"ALL", "value": "ALL"}, 
@@ -87,10 +89,10 @@ def render_content(tab):
                                 {'label': 'Prices Range', "value":"Prices Range"}
                             ], 
                             value = "ALL"
-                        ),  
+                            ),  
 
-                        ## Element is hidden by default, if Price Range option from dropdown is chosen, then it becomes unhidden
-                        html.Div([
+                            ## Element is hidden by default, if Price Range option from dropdown is chosen, then it becomes unhidden
+                            html.Div([
                             dcc.RangeSlider(
                             id = 'stock_value_slider',
                             min = 0,
@@ -99,26 +101,30 @@ def render_content(tab):
                             value = [0,30]
                             ),
                             
-                        ], style = {'display': 'block'}
-                        ), 
+                            ], style = {'display': 'block'}
+                            ), 
                         
-                        html.Div(id='slider_output', style = {'display': 'block'}), 
+                            html.Div(id='slider_output', style = {'display': 'block'}), 
                         
 
-                        dcc.Dropdown(
-                        id = 'Ticker',
-                        value = all_tickers[0]
-                        ),
+                            dcc.Dropdown(
+                            id = 'Ticker',
+                            value = all_tickers[0]
+                            )
 
-                        dcc.DatePickerRange(
-                        id='date_range',
-                        display_format = "D/M/YYYY",
-                        first_day_of_week = 1,
-                        min_date_allowed=date(2010, 1, 1),
-                        max_date_allowed = date(max_year, max_month, max_day) + timedelta(1),
-                        start_date=date(last_week_year, last_week_month, last_week_day),
-                        end_date=date(max_year, max_month, max_day) + timedelta(1)
-                        ),
+                        ], id = 'plot_selectors1'), 
+                        
+                        html.Div([
+                            dcc.DatePickerRange(
+                            id='date_range',
+                            display_format = "D/M/YYYY",
+                            first_day_of_week = 1,
+                            min_date_allowed=date(2010, 1, 1),
+                            max_date_allowed = date(max_year, max_month, max_day) + timedelta(1),
+                            start_date=date(last_week_year, last_week_month, last_week_day),
+                            end_date=date(max_year, max_month, max_day) + timedelta(1)
+                            )
+                        ], id = 'date_range_div'),
 
                         dcc.Checklist(
                         id = 'plot_content',
@@ -134,20 +140,43 @@ def render_content(tab):
                         
 
                         dcc.Graph(id = "stock_series"),
-    
-                        dcc.Dropdown(id = 'measure_type', 
-                                        options = [
+
+                        html.Div([
+                            html.Div([
+                                dcc.Dropdown(id = 'ma_buy_sell_type', 
+                                options = [
                                 {'label':"BUY", "value": "BUY"}, 
-                                {'label':"SELL", "value": "SELL"}, 
+                                {'label':"SELL", "value": "SELL"}
+                                ],
+                                value = "BUY"
+                            
+                                ),
+
+                                dash_table.DataTable(
+                                id='ma_buy_sell_table',
+                                columns=None,
+                                data=None,
+                                ), 
+                            ], id = 'table-left'),
+
+                            html.Div([
+                                dcc.Dropdown(id = 'ndays_measure_type', 
+                                        options = [
                                 {'label': 'MAX_PCT_CHANGE', 'value': 'MAX_PCT_CHANGE'}, 
                                 {'label': 'LOWEST_PRICE_IN_7_DAYS', 'value': 'LOWEST_PRICE_IN_7_DAYS'}, 
                                 {'label': 'LOWEST_PRICE_IN_3_DAYS', 'value': 'LOWEST_PRICE_IN_3_DAYS'}],
-                                value = "BUY"
-                            ),
-                       dash_table.DataTable(
-                            id='table-1',
-                            columns=None,
-                            data=None)
+                                value = "MAX_PCT_CHANGE"
+                                ), 
+
+                                dash_table.DataTable(
+                                id='ndays_measure_table',
+                                columns=None,
+                                data=None)
+
+                            ], id = 'table-right')
+
+                        ]  , id = "tables")
+                        
                     
         ]) 
 
@@ -166,30 +195,30 @@ def render_content(tab):
 def show_hide_stock_value_slider(market_choice):
 
     if market_choice == 'Prices Range':
-        return{'display':'block'}
-    else:
-        return{'display':'none'}
-
-## Showing/Hiding stock_value_slider print on a choice from first Dropdown
-@app.callback(
-    Output('slider_output', 'style'), 
-    [Input("Market", 'value')]
-)
-def show_hide_stock_value_slider(market_choice):
-
-    if market_choice == 'Prices Range':
-        return{'display':'block'}
+        return{'display':'block', 'padding-top':'15px', 'padding-bottom':'15px'}
     else:
         return{'display':'none'}
 
 ## Printing values selected through price range slider
 @app.callback(
-    Output('slider_output', 'children'),
-    [Input('stock_value_slider', 'value')])
-def update_output(value):
-    value1 = value[0]
-    value2 = value[1]
-    return 'Select tickers with last day prices between {} and {}'.format(value1, value2)
+    [Output('slider_output', 'children'),
+    Output('slider_output', 'style')],
+    [Input('Market', 'value'),
+    Input('stock_value_slider', 'value')])
+def update_output(market_choice, stock_values):
+
+    # Printing field can be only seen when prices range is selected. In such a case css styling is applied. 
+    if market_choice == 'Prices Range':
+        display = {'display':'block',  'padding-bottom':'15px', 'color':'white', 'font-weight':'bold', 'font-size':'150%', 'text-align':'center'}
+        value1 = stock_values[0]
+        value2 = stock_values[1]
+        str_to_ret = 'Tickers with last day prices between {} and {}'.format(value1, value2)
+        to_return = [str_to_ret, display]
+    else:
+        display = {'display':'none'}
+        to_return = ["", display]
+
+    return to_return
 
 ## Filtering tickers based on choice from first dropdown list
 @app.callback(
@@ -238,7 +267,6 @@ def get_tickers(market, stock_value_prices):
      ])
 def get_plot(ticker, start_date, end_date, plot_content):
 
-    print(end_date)
     ## Checking what additional plot elements have been chosen and applying functions to achieve proper visualisation
 
     df = pd.read_sql_query("""SELECT date, ticker, open, high, low, close, "adjusted" FROM stocks WHERE ticker = ?""", conn, params = (ticker,))
@@ -298,40 +326,59 @@ df_measures = measures.create_data(90, conn)
 
 @app.callback(
 
-    [Output("table-1", "columns"), 
-    Output("table-1", "data")], 
+    [Output("ma_buy_sell_table", "columns"), 
+    Output("ma_buy_sell_table", "data")], 
 
-    [Input('measure_type', 'value')]
+    [Input('ma_buy_sell_type', 'value')]
     
     )
-def fill_table(measure_type):
+def fill_ma_table(ma_buy_sell_type):
 
-    if measure_type == 'MAX_PCT_CHANGE':
+
+    if ma_buy_sell_type == 'BUY':
+        df_measures_extracted = measures.buy_sell_ma_rule(df_measures, ma_buy_sell_type)
+        df_measures_extracted = df_measures_extracted.loc[:,['ticker', 'date', 'adjusted', 'pct_change']]
+        columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
+        data=df_measures_extracted.to_dict('records')
+
+    elif ma_buy_sell_type == 'SELL':
+        df_measures_extracted = measures.buy_sell_ma_rule(df_measures, ma_buy_sell_type)
+        df_measures_extracted = df_measures_extracted.loc[:,['ticker', 'date', 'adjusted', 'pct_change']]
+        columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
+        data=df_measures_extracted.to_dict('records')
+
+    else:
+        pass
+
+    return (columns, data)
+
+@app.callback(
+
+    [Output("ndays_measure_table", "columns"), 
+    Output("ndays_measure_table", "data")], 
+
+    [Input('ndays_measure_type', 'value')]
+    
+    )
+def fill_measures(ndays_measure_type):
+
+    if ndays_measure_type == 'MAX_PCT_CHANGE':
         df_measures_extracted = df_measures.loc[df_measures['date'] == df_measures['date'].max()].copy()
+        df_measures_extracted = df_measures_extracted.loc[:,['ticker', 'date', 'adjusted', 'pct_change']]
         df_measures_extracted.sort_values("pct_change", ascending = False, inplace = True)
         df_measures_extracted = df_measures_extracted.head(20)
         columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
         data=df_measures_extracted.to_dict('records')
 
-    elif measure_type == 'BUY':
-        df_measures_extracted = measures.buy_sell_ma_rule(df_measures, measure_type)
-        df_measures_extracted.loc[:,['ticker', 'date', 'adjusted', 'pct_change']]
-        columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
-        data=df_measures_extracted.to_dict('records')
-
-    elif measure_type == 'SELL':
-        df_measures_extracted = measures.buy_sell_ma_rule(df_measures, measure_type)
-        df_measures_extracted.loc[:,['ticker', 'date', 'adjusted', 'pct_change']]
-        columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
-        data=df_measures_extracted.to_dict('records')
-
-    elif measure_type == 'LOWEST_PRICE_IN_7_DAYS':
+    elif ndays_measure_type == 'LOWEST_PRICE_IN_7_DAYS':
         df_measures_extracted = measures.lowest_price_in_ndays(df_measures, 7)
+        df_measures_extracted = df_measures_extracted.loc[:,['ticker', 'date', 'adjusted', 'pct_change']]
         columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
         data=df_measures_extracted.to_dict('records')
 
-    elif measure_type == 'LOWEST_PRICE_IN_3_DAYS':
+    elif ndays_measure_type == 'LOWEST_PRICE_IN_3_DAYS':
         df_measures_extracted = measures.lowest_price_in_ndays(df_measures, 3)
+        df_measures_extracted = df_measures_extracted.loc[:,['ticker', 'date', 'adjusted', 'pct_change']]
         columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
         data=df_measures_extracted.to_dict('records')
     else:
