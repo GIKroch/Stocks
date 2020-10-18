@@ -2,7 +2,6 @@ import sqlite3
 import pandas as pd
 from datetime import datetime, timedelta
 import numpy as np
-import matplotlib.pyplot as plt
 
 
 # conn = sqlite3.connect("stocks.db")
@@ -162,3 +161,37 @@ def first_price_increase_all(df, tickers_trend_change):
             tickers_trend_change.append(ticker)
 
     return tickers_trend_change
+
+
+def biggest_price_change_in_ndays(df, ndays):
+
+    data_to_return = []
+    for ticker in df['ticker'].unique():
+        
+        try:
+            df_ticker = df.loc[df['ticker'] == ticker].copy()
+            dates = list(df_ticker['date'].sort_values(ascending = False).unique())
+
+            ## Getting latest change in price for the ticker.List of dates is sorted from the latest, then we get the first list element
+            most_recent_date = dates[0]
+            historical_date = dates[ndays]
+
+            most_recent_price = df_ticker.loc[df_ticker['date'] == str(most_recent_date), 'adjusted']
+            most_recent_price = most_recent_price.values[0]
+
+            historical_price = df_ticker.loc[df_ticker['date'] == str(historical_date), 'adjusted']
+            historical_price = historical_price.values[0]
+
+            price_change = (most_recent_price/historical_price - 1) * 100
+
+
+            data_to_return.append([ticker, most_recent_date, most_recent_price, historical_price, price_change])
+            
+        except:
+            continue
+        
+    
+    df_to_return = pd.DataFrame(data_to_return, columns = ['ticker', 'most_recent_date', 'most_recent_price', 'historical_price', 'price_change'])
+    df_to_return.sort_values('price_change', inplace = True)
+    
+    return df_to_return

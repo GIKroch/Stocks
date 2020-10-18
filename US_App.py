@@ -163,8 +163,12 @@ def render_content(tab):
                                 dcc.Dropdown(id = 'ndays_measure_type', 
                                         options = [
                                 {'label': 'MAX_PCT_CHANGE', 'value': 'MAX_PCT_CHANGE'}, 
-                                {'label': 'LOWEST_PRICE_IN_7_DAYS', 'value': 'LOWEST_PRICE_IN_7_DAYS'}, 
-                                {'label': 'LOWEST_PRICE_IN_4_DAYS', 'value': 'LOWEST_PRICE_IN_4_DAYS'}],
+                                {'label': 'CONSTANT_PRICE_DROP_7_DAYS', 'value': 'CONSTANT_PRICE_DROP_7_DAYS'}, 
+                                {'label': 'CONSTANT_PRICE_DROP_4_DAYS', 'value': 'CONSTANT_PRICE_DROP_4_DAYS'}, 
+                                {'label': 'BIGGEST_NEGATIVE_CHANGE_IN_14_DAYS', 'value': 'BIGGEST_NEGATIVE_CHANGE_IN_14_DAYS'}, 
+                                {'label': 'BIGGEST_POSITIVE_CHANGE_IN_14_DAYS', 'value': 'BIGGEST_POSITIVE_CHANGE_IN_14_DAYS'}, 
+                                {'label': 'BIGGEST_NEGATIVE_CHANGE_IN_7_DAYS', 'value': 'BIGGEST_NEGATIVE_CHANGE_IN_7_DAYS'}, 
+                                {'label': 'BIGGEST_POSITIVE_CHANGE_IN_7_DAYS', 'value': 'BIGGEST_POSITIVE_CHANGE_IN_7_DAYS'}],
                                 value = "MAX_PCT_CHANGE"
                                 ), 
 
@@ -336,16 +340,12 @@ def fill_ma_table(ma_buy_sell_type):
 
 
     if ma_buy_sell_type == 'BUY':
-        # df_measures_extracted = measures.buy_sell_ma_rule(df_measures, ma_buy_sell_type)
         df_measures_extracted = pd.read_sql_query("SELECT ticker, date, adjusted, pct_change FROM ma_buy", conn)
-        # df_measures_extracted = df_measures_extracted.loc[:,['ticker', 'date', 'adjusted', 'pct_change']]
         columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
         data=df_measures_extracted.to_dict('records')
 
     elif ma_buy_sell_type == 'SELL':
-        # df_measures_extracted = measures.buy_sell_ma_rule(df_measures, ma_buy_sell_type)
         df_measures_extracted = pd.read_sql_query("SELECT ticker, date, adjusted, pct_change FROM ma_sell", conn)
-        # df_measures_extracted = df_measures_extracted.loc[:,['ticker', 'date', 'adjusted', 'pct_change']]
         columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
         data=df_measures_extracted.to_dict('records')
 
@@ -366,25 +366,40 @@ def fill_measures(ndays_measure_type):
 
     if ndays_measure_type == 'MAX_PCT_CHANGE':
         df_measures_extracted = pd.read_sql_query("SELECT ticker, date, adjusted, pct_change FROM max_pct_change", conn)
-        # df_measures_extracted = df_measures.loc[df_measures['date'] == df_measures['date'].max()].copy()
-        # df_measures_extracted = df_measures_extracted.loc[:,['ticker', 'date', 'adjusted', 'pct_change']]
-        # df_measures_extracted.sort_values("pct_change", ascending = False, inplace = True)
         df_measures_extracted = df_measures_extracted.head(20)
         columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
         data=df_measures_extracted.to_dict('records')
 
-    elif ndays_measure_type == 'LOWEST_PRICE_IN_7_DAYS':
-        df_measures_extracted = pd.read_sql_query("SELECT ticker, date, adjusted, pct_change FROM min_price_7", conn)
-        # df_measures_extracted = measures.lowest_price_in_ndays(df_measures, 7)
-        # df_measures_extracted = df_measures_extracted.loc[:,['ticker', 'date', 'adjusted', 'pct_change']]
+    elif ndays_measure_type == 'CONSTANT_PRICE_DROP_7_DAYS':
+        df_measures_extracted = pd.read_sql_query("SELECT ticker, date, adjusted, pct_change FROM min_price_consecutive_7", conn)
         columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
         data=df_measures_extracted.to_dict('records')
 
-    elif ndays_measure_type == 'LOWEST_PRICE_IN_4_DAYS':
-        df_measures_extracted = pd.read_sql_query("SELECT ticker, date, adjusted, pct_change FROM min_price_4", conn)
-        # df_measures_extracted = df_measures_extracted.loc[:,['ticker', 'date', 'adjusted', 'pct_change']]
+    elif ndays_measure_type == 'CONSTANT_PRICE_DROP_4_DAYS':
+        df_measures_extracted = pd.read_sql_query("SELECT ticker, date, adjusted, pct_change FROM min_price_consecutive_4", conn)
         columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
         data=df_measures_extracted.to_dict('records')
+
+    elif ndays_measure_type == 'BIGGEST_NEGATIVE_CHANGE_IN_14_DAYS':
+        df_measures_extracted = pd.read_sql_query("SELECT ticker, most_recent_date, most_recent_price, historical_price, price_change FROM biggest_negative_change_in_14_days", conn)
+        columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
+        data=df_measures_extracted.to_dict('records')
+
+    elif ndays_measure_type == 'BIGGEST_POSITIVE_CHANGE_IN_14_DAYS':
+        df_measures_extracted = pd.read_sql_query("SELECT ticker, most_recent_date, most_recent_price, historical_price, price_change FROM biggest_positive_change_in_14_days", conn)
+        columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
+        data=df_measures_extracted.to_dict('records')
+
+    elif ndays_measure_type == 'BIGGEST_NEGATIVE_CHANGE_IN_7_DAYS':
+        df_measures_extracted = pd.read_sql_query("SELECT ticker, most_recent_date, most_recent_price, historical_price, price_change FROM biggest_negative_change_in_7_days", conn)
+        columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
+        data=df_measures_extracted.to_dict('records')
+
+    elif ndays_measure_type == 'BIGGEST_POSITIVE_CHANGE_IN_7_DAYS':
+        df_measures_extracted = pd.read_sql_query("SELECT ticker, most_recent_date, most_recent_price, historical_price, price_change FROM biggest_positive_change_in_7_days", conn)
+        columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
+        data=df_measures_extracted.to_dict('records')
+
     else:
         pass
 

@@ -87,13 +87,34 @@ def calculate_measures():
     df_measures_extracted.sort_values("pct_change", ascending = False, inplace = True)
     df_measures_extracted.to_sql('max_pct_change', conn, if_exists='replace')
 
-    ## MIN PRICE 7 days
+    ## MIN PRICE 7 days - 7 days of constant drop
     df_measures_extracted = measures.lowest_price_in_ndays(df_measures, 7)
-    df_measures_extracted.to_sql('min_price_7', conn, if_exists='replace')
+    df_measures_extracted.to_sql('min_price_consecutive_7', conn, if_exists='replace')
 
-    ## MIN PRICE 4 days
+    ## MIN PRICE 4 days - 4 days of constant drop
     df_measures_extracted = measures.lowest_price_in_ndays(df_measures, 4)
-    df_measures_extracted.to_sql('min_price_4', conn, if_exists='replace')
+    df_measures_extracted.to_sql('min_price_consecutive_4', conn, if_exists='replace')
+
+    ## Biggest price changes between most recent date and 7 days ago
+    df_price_change_14 = measures.biggest_price_change_in_ndays(df_measures, 14)
+    
+    df_biggest_negative_change = df_price_change_14.head(20)
+    df_biggest_negative_change.to_sql('biggest_negative_change_in_14_days', conn, if_exists='replace')
+    
+    df_biggest_positive_change = df_price_change_14.tail(20).copy()
+    df_biggest_positive_change.sort_values('price_change', ascending = False, inplace = True)
+    df_biggest_positive_change.to_sql('biggest_positive_change_in_14_days', conn, if_exists='replace')
+
+    ## Biggest price changes between most recent date and 7 days ago
+    df_price_change_7 = measures.biggest_price_change_in_ndays(df_measures, 7)
+    
+    df_biggest_negative_change = df_price_change_7.head(20)
+    df_biggest_negative_change.to_sql('biggest_negative_change_in_7_days', conn, if_exists='replace')
+    
+    df_biggest_positive_change = df_price_change_7.tail(20).copy()
+    df_biggest_positive_change.sort_values('price_change', ascending = False, inplace = True)
+    df_biggest_positive_change.to_sql('biggest_positive_change_in_7_days', conn, if_exists='replace')
+
 
 update_data()
 calculate_measures()
