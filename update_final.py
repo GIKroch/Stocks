@@ -2,10 +2,7 @@ import pandas as pd
 import pandas_datareader.data as web
 from datetime import datetime, timedelta
 import sqlite3
-
-## The idea is to create a few tables with measures, once the data is updated. In such a way, we avoid calculating the same measure values many times in application 
 import measures
-
 
 def get_data(ticker, market, start, end, conn):
     
@@ -21,15 +18,65 @@ def get_data(ticker, market, start, end, conn):
     df.to_sql("stocks", conn, if_exists='append', index = False)
 
 
-def update_data_today():
+def update_data_yesterday(conn):
+    yesterday = datetime.today() - timedelta(1)
+    day_name = yesterday.strftime("%A")
+
+    if day_name == 'Sunday':
+        end = datetime.today() - timedelta(2)
+
+    elif day_name == "Saturday":
+        end = datetime.today() - timedelta(1)
+
+    else:
+        end = yesterday
+
+    c = conn.cursor()
+
+    last_date = c.execute("SELECT MAX(date) FROM stocks")
+    last_date = last_date.fetchone()[0]
+    last_date = pd.to_datetime(last_date)
+    
+    
+    if last_date.day < pd.to_datetime(end).day:
+    
+        c.execute("DROP TABLE stocks")
+        c.execute("""CREATE TABLE stocks (indx INTEGER PRIMARY KEY, 
+                                        ticker TEXT,
+                                        market TEXT,
+                                        date DATE, 
+                                        high REAL, 
+                                        low REAL, 
+                                        open REAL,
+                                        close REAL,
+                                        adjusted REAL,
+                                        volume REAL 
+
+                                        ) """)
+        conn.commit()
+
+        etoro_stocks = pd.read_excel("etoro_stocks.xlsx")
+        start = datetime(2015, 1, 1)
+
+        for index, row in etoro_stocks.iterrows():
+            ticker = row["Ticker"] 
+            market = row["Market"]
+
+            try:
+                print(ticker)
+                get_data(ticker, market, start, end, conn)
+            except:
+                print("ERROR", ticker)
+                pass
+
+def update_data_today(conn):
 
     # Check for a business day
-    start = datetime(2010, 1, 1)
+    start = datetime(2015, 1, 1)
     end = datetime.today()
 
     if bool(len(pd.bdate_range(end, end))) == True:
 
-        conn = sqlite3.connect("stocks.db")
         c = conn.cursor()
         c.execute("DROP TABLE stocks")
         c.execute("""CREATE TABLE stocks (indx INTEGER PRIMARY KEY, 
@@ -48,8 +95,6 @@ def update_data_today():
 
         etoro_stocks = pd.read_excel("etoro_stocks.xlsx")
         
-        
-
         for index, row in etoro_stocks.iterrows():
             ticker = row["Ticker"] 
             market = row["Market"]
@@ -60,15 +105,15 @@ def update_data_today():
             except:
                 print("ERROR", ticker)
                 pass
+            
     else:
         print("It's a free day")
         pass
 
-def calculate_measures():
+
+def calculate_measures(conn):
 
     print("Calculate measures is running")
-
-    conn = sqlite3.connect("stocks.db")
 
     df_measures = measures.create_data(90, conn)
 
@@ -116,5 +161,22 @@ def calculate_measures():
     df_biggest_positive_change.to_sql('biggest_positive_change_in_7_days', conn, if_exists='replace')
 
 
-update_data_today()
-calculate_measures()
+def update_final():
+
+    conn = sqlite3.connect("stocks.db")
+    ## It's based on the current hour which function is used
+
+    current_hour = datetime.now().hour
+
+    if current_hour > 22:
+        print("today")
+        update_data_today(conn)
+        calculate_measures(conn)
+        
+    else:
+        print("yesterday")
+        update_data_yesterday(conn)
+        calculate_measures(conn)
+
+
+update_final()

@@ -186,7 +186,37 @@ def render_content(tab):
 
     elif tab == 'tab-2':
         return html.Div([
-            html.H3('Tab content 2')
+            html.Div([
+                html.Div([
+
+                    html.H3('Buy Stocks Interface'), 
+                    dcc.DatePickerSingle(
+                        id='purchase_date',
+                        display_format = "D/M/YYYY",
+                        first_day_of_week = 1, 
+                        min_date_allowed = date(2010, 1, 1),
+                        initial_visible_month = date(max_year, max_month, max_day),
+                        date = date(max_year, max_month, max_day)
+                    ), 
+                    dcc.Input(id="ticker_purchased", type="text", placeholder="Ticker Purchased", className="input_field"), 
+                    dcc.Input(id="price_for_ticker", type="text", placeholder="Price for Share", className="input_field"),
+                    dcc.Input(id="value_invested", type="text", placeholder="Money Invested", className="input_field"),  
+                    html.Button('Buy Stocks', id='buy_stocks', n_clicks=0)
+
+                ], id = 'buy_stocks_interface'), 
+                
+
+                html.Div([
+                    html.H3('Sell Stocks Interface'), 
+                    dcc.Input(id="ticker_sold", type="text", placeholder="Ticker Sold", className="input_field"), 
+                    dcc.Input(id="value_to_sell", type="text", placeholder="Value to sell", className="input_field"), 
+                    html.Button('Sell Stocks', id='sell_stocks', n_clicks=0) 
+
+
+                ], id = 'sell_stocks_interface') 
+            ], id = 'stocks_interface')    
+                
+
         ])
             
 ########################################################################################## Dashboard functions ######################################################################################
