@@ -19,7 +19,7 @@ import measures
 ## Connecting to database
 
 ### Check same thread dodane, żeby pozbyć się errora - docelowo dobrze jakby tego nie było
-conn = sqlite3.connect("stocks.db", check_same_thread = False)
+conn = sqlite3.connect(r"Z:\Stocks\stocks.db", check_same_thread = False)
 c = conn.cursor()
 ## Running an update_data script - all conditions whether the data should be updated are not, are resolved in a script itself
 
@@ -162,14 +162,13 @@ def render_content(tab):
                             html.Div([
                                 dcc.Dropdown(id = 'ndays_measure_type', 
                                         options = [
-                                {'label': 'MAX_PCT_CHANGE', 'value': 'MAX_PCT_CHANGE'}, 
+                                {'label': 'MAX PCT CHANGE POSITIVE', 'value': 'MAX_PCT_CHANGE_POSITIVE'}, 
+                                {'label': 'MAX_PCT_CHANGE_NEGATIVE', 'value': 'MAX_PCT_CHANGE_NEGATIVE'}, 
                                 {'label': 'CONSTANT_PRICE_DROP_7_DAYS', 'value': 'CONSTANT_PRICE_DROP_7_DAYS'}, 
                                 {'label': 'CONSTANT_PRICE_DROP_4_DAYS', 'value': 'CONSTANT_PRICE_DROP_4_DAYS'}, 
-                                {'label': 'BIGGEST_NEGATIVE_CHANGE_IN_14_DAYS', 'value': 'BIGGEST_NEGATIVE_CHANGE_IN_14_DAYS'}, 
-                                {'label': 'BIGGEST_POSITIVE_CHANGE_IN_14_DAYS', 'value': 'BIGGEST_POSITIVE_CHANGE_IN_14_DAYS'}, 
-                                {'label': 'BIGGEST_NEGATIVE_CHANGE_IN_7_DAYS', 'value': 'BIGGEST_NEGATIVE_CHANGE_IN_7_DAYS'}, 
-                                {'label': 'BIGGEST_POSITIVE_CHANGE_IN_7_DAYS', 'value': 'BIGGEST_POSITIVE_CHANGE_IN_7_DAYS'}],
-                                value = "MAX_PCT_CHANGE"
+                                {'label': 'BIGGEST_NEGATIVE_CHANGE_IN_7_DAYS', 'value': 'BIGGEST_NEGATIVE_CHANGE_IN_7_DAYS'},
+                                {'label': 'BIGGEST_NEGATIVE_CHANGE_IN_14_DAYS', 'value': 'BIGGEST_NEGATIVE_CHANGE_IN_14_DAYS'}],
+                                value = "MAX_PCT_CHANGE_POSITIVE"
                                 ), 
 
                                 dash_table.DataTable(
@@ -186,37 +185,7 @@ def render_content(tab):
 
     elif tab == 'tab-2':
         return html.Div([
-            html.Div([
-                html.Div([
-
-                    html.H3('Buy Stocks Interface'), 
-                    dcc.DatePickerSingle(
-                        id='purchase_date',
-                        display_format = "D/M/YYYY",
-                        first_day_of_week = 1, 
-                        min_date_allowed = date(2010, 1, 1),
-                        initial_visible_month = date(max_year, max_month, max_day),
-                        date = date(max_year, max_month, max_day)
-                    ), 
-                    dcc.Input(id="ticker_purchased", type="text", placeholder="Ticker Purchased", className="input_field"), 
-                    dcc.Input(id="price_for_ticker", type="text", placeholder="Price for Share", className="input_field"),
-                    dcc.Input(id="value_invested", type="text", placeholder="Money Invested", className="input_field"),  
-                    html.Button('Buy Stocks', id='buy_stocks', n_clicks=0)
-
-                ], id = 'buy_stocks_interface'), 
                 
-
-                html.Div([
-                    html.H3('Sell Stocks Interface'), 
-                    dcc.Input(id="ticker_sold", type="text", placeholder="Ticker Sold", className="input_field"), 
-                    dcc.Input(id="value_to_sell", type="text", placeholder="Value to sell", className="input_field"), 
-                    html.Button('Sell Stocks', id='sell_stocks', n_clicks=0) 
-
-
-                ], id = 'sell_stocks_interface') 
-            ], id = 'stocks_interface')    
-                
-
         ])
             
 ########################################################################################## Dashboard functions ######################################################################################
@@ -394,12 +363,18 @@ def fill_ma_table(ma_buy_sell_type):
     )
 def fill_measures(ndays_measure_type):
 
-    if ndays_measure_type == 'MAX_PCT_CHANGE':
+    if ndays_measure_type == 'MAX_PCT_CHANGE_POSITIVE':
         df_measures_extracted = pd.read_sql_query("SELECT ticker, date, adjusted, pct_change FROM max_pct_change", conn)
         df_measures_extracted = df_measures_extracted.head(20)
         columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
         data=df_measures_extracted.to_dict('records')
 
+    elif ndays_measure_type == 'MAX_PCT_CHANGE_NEGATIVE':
+        df_measures_extracted = pd.read_sql_query("SELECT ticker, date, adjusted, pct_change FROM max_pct_change", conn)
+        df_measures_extracted = df_measures_extracted.tail(20)
+        columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
+        data=df_measures_extracted.to_dict('records')
+    
     elif ndays_measure_type == 'CONSTANT_PRICE_DROP_7_DAYS':
         df_measures_extracted = pd.read_sql_query("SELECT ticker, date, adjusted, pct_change FROM min_price_consecutive_7", conn)
         columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
@@ -409,24 +384,14 @@ def fill_measures(ndays_measure_type):
         df_measures_extracted = pd.read_sql_query("SELECT ticker, date, adjusted, pct_change FROM min_price_consecutive_4", conn)
         columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
         data=df_measures_extracted.to_dict('records')
-
-    elif ndays_measure_type == 'BIGGEST_NEGATIVE_CHANGE_IN_14_DAYS':
-        df_measures_extracted = pd.read_sql_query("SELECT ticker, most_recent_date, most_recent_price, historical_price, price_change FROM biggest_negative_change_in_14_days", conn)
-        columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
-        data=df_measures_extracted.to_dict('records')
-
-    elif ndays_measure_type == 'BIGGEST_POSITIVE_CHANGE_IN_14_DAYS':
-        df_measures_extracted = pd.read_sql_query("SELECT ticker, most_recent_date, most_recent_price, historical_price, price_change FROM biggest_positive_change_in_14_days", conn)
-        columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
-        data=df_measures_extracted.to_dict('records')
-
+    
     elif ndays_measure_type == 'BIGGEST_NEGATIVE_CHANGE_IN_7_DAYS':
         df_measures_extracted = pd.read_sql_query("SELECT ticker, most_recent_date, most_recent_price, historical_price, price_change FROM biggest_negative_change_in_7_days", conn)
         columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
         data=df_measures_extracted.to_dict('records')
 
-    elif ndays_measure_type == 'BIGGEST_POSITIVE_CHANGE_IN_7_DAYS':
-        df_measures_extracted = pd.read_sql_query("SELECT ticker, most_recent_date, most_recent_price, historical_price, price_change FROM biggest_positive_change_in_7_days", conn)
+    elif ndays_measure_type == 'BIGGEST_NEGATIVE_CHANGE_IN_14_DAYS':
+        df_measures_extracted = pd.read_sql_query("SELECT ticker, most_recent_date, most_recent_price, historical_price, price_change FROM biggest_negative_change_in_14_days", conn)
         columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
         data=df_measures_extracted.to_dict('records')
 

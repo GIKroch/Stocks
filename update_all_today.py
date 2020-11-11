@@ -64,11 +64,9 @@ def update_data_today():
         print("It's a free day")
         pass
 
-def calculate_measures():
+def calculate_measures(conn):
 
     print("Calculate measures is running")
-
-    conn = sqlite3.connect("stocks.db")
 
     df_measures = measures.create_data(90, conn)
 
@@ -100,21 +98,14 @@ def calculate_measures():
     
     df_biggest_negative_change = df_price_change_14.head(20)
     df_biggest_negative_change.to_sql('biggest_negative_change_in_14_days', conn, if_exists='replace')
-    
-    df_biggest_positive_change = df_price_change_14.tail(20).copy()
-    df_biggest_positive_change.sort_values('price_change', ascending = False, inplace = True)
-    df_biggest_positive_change.to_sql('biggest_positive_change_in_14_days', conn, if_exists='replace')
 
     ## Biggest price changes between most recent date and 7 days ago
     df_price_change_7 = measures.biggest_price_change_in_ndays(df_measures, 7)
     
     df_biggest_negative_change = df_price_change_7.head(20)
     df_biggest_negative_change.to_sql('biggest_negative_change_in_7_days', conn, if_exists='replace')
-    
-    df_biggest_positive_change = df_price_change_7.tail(20).copy()
-    df_biggest_positive_change.sort_values('price_change', ascending = False, inplace = True)
-    df_biggest_positive_change.to_sql('biggest_positive_change_in_7_days', conn, if_exists='replace')
 
 
 update_data_today()
-calculate_measures()
+conn = sqlite3.connect("stocks.db")
+calculate_measures(conn)
