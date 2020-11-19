@@ -339,12 +339,12 @@ def fill_ma_table(ma_buy_sell_type):
 
 
     if ma_buy_sell_type == 'BUY':
-        df_measures_extracted = pd.read_sql_query("SELECT ticker, date, adjusted, pct_change FROM ma_buy", conn)
+        df_measures_extracted = pd.read_sql_query("SELECT ticker, date, industry, adjusted, pct_change FROM ma_buy", conn)
         columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
         data=df_measures_extracted.to_dict('records')
 
     elif ma_buy_sell_type == 'SELL':
-        df_measures_extracted = pd.read_sql_query("SELECT ticker, date, adjusted, pct_change FROM ma_sell", conn)
+        df_measures_extracted = pd.read_sql_query("SELECT ticker, date, industry, adjusted, pct_change FROM ma_sell", conn)
         columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
         data=df_measures_extracted.to_dict('records')
 
@@ -364,34 +364,34 @@ def fill_ma_table(ma_buy_sell_type):
 def fill_measures(ndays_measure_type):
 
     if ndays_measure_type == 'MAX_PCT_CHANGE_POSITIVE':
-        df_measures_extracted = pd.read_sql_query("SELECT ticker, date, adjusted, pct_change FROM max_pct_change", conn)
+        df_measures_extracted = pd.read_sql_query("SELECT ticker, date, industry, adjusted, pct_change FROM max_pct_change", conn)
         df_measures_extracted = df_measures_extracted.head(20)
         columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
         data=df_measures_extracted.to_dict('records')
 
     elif ndays_measure_type == 'MAX_PCT_CHANGE_NEGATIVE':
-        df_measures_extracted = pd.read_sql_query("SELECT ticker, date, adjusted, pct_change FROM max_pct_change", conn)
+        df_measures_extracted = pd.read_sql_query("SELECT ticker, date, industry, adjusted, pct_change FROM max_pct_change", conn)
         df_measures_extracted = df_measures_extracted.tail(20)
         columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
         data=df_measures_extracted.to_dict('records')
     
     elif ndays_measure_type == 'CONSTANT_PRICE_DROP_7_DAYS':
-        df_measures_extracted = pd.read_sql_query("SELECT ticker, date, adjusted, pct_change FROM min_price_consecutive_7", conn)
+        df_measures_extracted = pd.read_sql_query("SELECT ticker, date, industry, adjusted, pct_change FROM min_price_consecutive_7", conn)
         columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
         data=df_measures_extracted.to_dict('records')
 
     elif ndays_measure_type == 'CONSTANT_PRICE_DROP_4_DAYS':
-        df_measures_extracted = pd.read_sql_query("SELECT ticker, date, adjusted, pct_change FROM min_price_consecutive_4", conn)
+        df_measures_extracted = pd.read_sql_query("SELECT ticker, date, industry, adjusted, pct_change FROM min_price_consecutive_4", conn)
         columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
         data=df_measures_extracted.to_dict('records')
     
     elif ndays_measure_type == 'BIGGEST_NEGATIVE_CHANGE_IN_7_DAYS':
-        df_measures_extracted = pd.read_sql_query("SELECT ticker, most_recent_date, most_recent_price, historical_price, price_change FROM biggest_negative_change_in_7_days", conn)
+        df_measures_extracted = pd.read_sql_query("SELECT ticker, industry, most_recent_date, most_recent_price, historical_price, price_change FROM biggest_negative_change_in_7_days", conn)
         columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
         data=df_measures_extracted.to_dict('records')
 
     elif ndays_measure_type == 'BIGGEST_NEGATIVE_CHANGE_IN_14_DAYS':
-        df_measures_extracted = pd.read_sql_query("SELECT ticker, most_recent_date, most_recent_price, historical_price, price_change FROM biggest_negative_change_in_14_days", conn)
+        df_measures_extracted = pd.read_sql_query("SELECT ticker, industry, most_recent_date, most_recent_price, historical_price, price_change FROM biggest_negative_change_in_14_days", conn)
         columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
         data=df_measures_extracted.to_dict('records')
 

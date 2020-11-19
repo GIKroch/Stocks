@@ -144,3 +144,5 @@ def get_final_etoro_list():
     df_final = df_stocks_markets.merge(df_industry, how = 'left', on = 'ticker')
     
     df_final.to_excel('etoro_stocks.xlsx', index = False)
+
+get_final_etoro_list()

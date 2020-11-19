@@ -14,7 +14,7 @@ def create_data(time_range, conn):
     ## Converting to desired format
     bottom_date = bottom_date.strftime(format = "%Y-%m-%d 00:00:00")
     bottom_date = "'" + bottom_date + "'"
-    df = pd.read_sql_query("SELECT ticker, date, adjusted FROM stocks WHERE date >= {}".format(bottom_date), conn)
+    df = pd.read_sql_query("SELECT ticker, date, industry, adjusted FROM stocks WHERE date >= {}".format(bottom_date), conn)
     ## Sorting values to have correct stocks for specific ticker grouped in one cluster
     df = df.sort_values(["ticker", 'date'])
 
@@ -172,6 +172,7 @@ def biggest_price_change_in_ndays(df, ndays):
             df_ticker = df.loc[df['ticker'] == ticker].copy()
             dates = list(df_ticker['date'].sort_values(ascending = False).unique())
 
+            industry = df_ticker["industry"][0]
             ## Getting latest change in price for the ticker.List of dates is sorted from the latest, then we get the first list element
             most_recent_date = dates[0]
             historical_date = dates[ndays]
@@ -185,13 +186,13 @@ def biggest_price_change_in_ndays(df, ndays):
             price_change = (most_recent_price/historical_price - 1) * 100
 
 
-            data_to_return.append([ticker, most_recent_date, most_recent_price, historical_price, price_change])
+            data_to_return.append([ticker, industry, most_recent_date, most_recent_price, historical_price, price_change])
             
         except:
             continue
         
     
-    df_to_return = pd.DataFrame(data_to_return, columns = ['ticker', 'most_recent_date', 'most_recent_price', 'historical_price', 'price_change'])
+    df_to_return = pd.DataFrame(data_to_return, columns = ['ticker',  "industry", 'most_recent_date', 'most_recent_price', 'historical_price', 'price_change'])
     df_to_return.sort_values('price_change', inplace = True)
     
     return df_to_return

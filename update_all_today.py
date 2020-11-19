@@ -7,7 +7,7 @@ import sqlite3
 import measures
 
 
-def get_data(ticker, market, start, end, conn):
+def get_data(ticker, market, industry, start, end, conn):
     
     df = web.DataReader(ticker, 'yahoo', start, end)
     df.columns = [column.lower() for column in df.columns]
@@ -15,7 +15,8 @@ def get_data(ticker, market, start, end, conn):
     df.rename(columns = {"adj close": "adjusted", "Date":"date"}, inplace = True)
     df["ticker"] = ticker
     df["market"] = market
-    df = df.loc[:,["ticker", 'market', 'date', 'high', 'low', 'open', 'close', 'adjusted', 'volume']]
+    df["industry"] = industry
+    df = df.loc[:,["ticker", 'market', 'industry', 'date', 'high', 'low', 'open', 'close', 'adjusted', 'volume']]
     
     
     df.to_sql("stocks", conn, if_exists='append', index = False)
@@ -35,6 +36,7 @@ def update_data_today():
         c.execute("""CREATE TABLE stocks (indx INTEGER PRIMARY KEY, 
                                         ticker TEXT,
                                         market TEXT,
+                                        industry TEXT, 
                                         date DATE, 
                                         high REAL, 
                                         low REAL, 
@@ -51,12 +53,13 @@ def update_data_today():
         
 
         for index, row in etoro_stocks.iterrows():
-            ticker = row["Ticker"] 
-            market = row["Market"]
+            ticker = row["ticker"] 
+            market = row["market"]
+            industry = row['industry']
             
             try:
                 print(ticker)
-                get_data(ticker, market, start, end, conn)
+                get_data(ticker, market, industry, start, end, conn)
             except:
                 print("ERROR", ticker)
                 pass
