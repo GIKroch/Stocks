@@ -24,22 +24,17 @@ c = conn.cursor()
 ## Running an update_data script - all conditions whether the data should be updated are not, are resolved in a script itself
 
 
-############################################################################################################# Loading info about tickers #######################################################################
+############################################################################################################# Loading info about industries #######################################################################
 
-################################ Tickers 
-all_tickers = list(c.execute("SELECT DISTINCT ticker FROM stocks"))
-all_tickers = [ticker[0] for ticker in all_tickers]
-all_tickers.sort()
+################################ industries
+industries = list(c.execute("SELECT DISTINCT industry FROM stocks"))
+industries = [industry[0] for industry in industries]
+industries.sort()
+industries.insert(0, "All")
 
-nasdaq_tickers = list(c.execute("SELECT DISTINCT ticker FROM stocks WHERE market = 'NASDAQ'"))
-nasdaq_tickers = [ticker[0] for ticker in nasdaq_tickers]
-
-nyse_tickers = list(c.execute("SELECT DISTINCT ticker FROM stocks WHERE market = 'NYSE'"))
-nyse_tickers = [ticker[0] for ticker in nyse_tickers]
+############################################################################################################# Dates ###############################################################################################
 
 number_of_dates = len(list(c.execute("SELECT DISTINCT date FROM stocks")))
-
-############################## Dates
 ## Creating dates for date range selection
 max_date = list(c.execute("SELECT  MAX(date) FROM stocks"))[0][0]
 max_date = max_date.split(" ")[0]
@@ -59,6 +54,12 @@ last_week_date = last_week_date.split("-")
 last_week_year = int(last_week_date[0])
 last_week_month = int(last_week_date[1])
 last_week_day = int(last_week_date[2])
+
+## MAX Recent price per stock
+max_price = list(c.execute("""SELECT MAX(adjusted) 
+                             FROM stocks 
+                             WHERE date 
+                             IN (SELECT MAX(date) FROM stocks)"""))[0][0]
 
 ############################################################################################################## Dash App ########################################################################################
 
@@ -81,35 +82,28 @@ def render_content(tab):
         return html.Div([
                         html.Div([
                             dcc.Dropdown(
-                            id = "Market", 
+                            id = "Industry", 
                             options = [
-                                {'label':"ALL", "value": "ALL"}, 
-                                {'label':"NYSE", "value": "NYSE"}, 
-                                {'label': "NASDAQ", "value":"NASDAQ"}, 
-                                {'label': 'Prices Range', "value":"Prices Range"}
+                                {'label': industry, "value": industry} for industry in industries
                             ], 
-                            value = "ALL"
+                            value = "All"
                             ),  
 
-                            ## Element is hidden by default, if Price Range option from dropdown is chosen, then it becomes unhidden
-                            html.Div([
+                            # html.Div([
                             dcc.RangeSlider(
                             id = 'stock_value_slider',
                             min = 0,
-                            max= 1000,
+                            max = max_price,
                             step = 1,
-                            value = [0,30]
+                            value = [0,100]
                             ),
                             
-                            ], style = {'display': 'block'}
-                            ), 
-                        
-                            html.Div(id='slider_output', style = {'display': 'block'}), 
-                        
-
+                            # ]
+                            # ),                         
+                            html.Div(id='slider_output'), 
+                    
                             dcc.Dropdown(
-                            id = 'Ticker',
-                            value = all_tickers[0]
+                            id = 'Ticker'
                             )
 
                         ], id = 'plot_selectors1'), 
@@ -191,75 +185,67 @@ def render_content(tab):
 ########################################################################################## Dashboard functions ######################################################################################
 
 ## Showing/Hiding stock_value_slider based on a choice from first Dropdown
-@app.callback(
-    dash.dependencies.Output('stock_value_slider', 'style'), 
-    [dash.dependencies.Input("Market", 'value')]
-)
-def show_hide_stock_value_slider(market_choice):
-
-    if market_choice == 'Prices Range':
-        return{'display':'block', 'padding-top':'15px', 'padding-bottom':'15px'}
-    else:
-        return{'display':'none'}
 
 ## Printing values selected through price range slider
 @app.callback(
     [Output('slider_output', 'children'),
-    Output('slider_output', 'style')],
-    [Input('Market', 'value'),
+    ],
+    [
     Input('stock_value_slider', 'value')])
-def update_output(market_choice, stock_values):
+def update_price_slider_output(stock_values):
 
-    # Printing field can be only seen when prices range is selected. In such a case css styling is applied. 
-    if market_choice == 'Prices Range':
-        display = {'display':'block',  'padding-bottom':'15px', 'color':'white', 'font-weight':'bold', 'font-size':'150%', 'text-align':'center'}
-        value1 = stock_values[0]
-        value2 = stock_values[1]
-        str_to_ret = 'Tickers with last day prices between {} and {}'.format(value1, value2)
-        to_return = [str_to_ret, display]
-    else:
-        display = {'display':'none'}
-        to_return = ["", display]
+    value1 = stock_values[0]
+    value2 = stock_values[1]
+    str_to_ret = 'Desired price range to filter tickers: {} - {}'.format(value1, value2)
+    to_return = [str_to_ret]
+    
 
     return to_return
 
-## Filtering tickers based on choice from first dropdown list
+## Filtering tickers based on industry choice from first dropdown list and price range slider
 @app.callback(
     Output("Ticker", "options"), 
     [
-        Input("Market", "value"), 
+        Input("Industry", "value"), 
         Input("stock_value_slider", "value")
     ]
 )
-def get_tickers(market, stock_value_prices):
+def get_tickers(industry, stock_value_prices):
 
-    if market == "ALL":
-        options = [{"label": ticker, "value": ticker} for ticker in all_tickers]
-    
-    elif market == "NYSE":
-        options = [{"label": ticker, "value": ticker} for ticker in nyse_tickers]
+    lower_bound = stock_value_prices[0]
+    higher_bound = stock_value_prices[1]
 
-    elif market == "NASDAQ":
-        options = [{"label": ticker, "value": ticker} for ticker in nasdaq_tickers]
-
-    else:
+    if industry == "All":
+        # options = [{"label": ticker, "value": ticker} for ticker in all_tickers]
         lower_bound = stock_value_prices[0]
         higher_bound = stock_value_prices[1]
 
         ## Choosing tickers based on their prices from last available day
-        price_tickers = list(c.execute("""SELECT ticker 
+        tickers_to_return = list(c.execute("""SELECT ticker 
                                FROM stocks 
                                WHERE adjusted >= ? and adjusted <= ?
                                AND date IN (SELECT MAX(date) FROM stocks)""", (lower_bound, higher_bound)))
         
-        price_tickers = [ticker[0] for ticker in price_tickers]
-        options = [{"label": ticker, "value": ticker} for ticker in price_tickers]
-        
+        tickers_to_return = [ticker[0] for ticker in tickers_to_return]
+        options = [{"label": ticker, "value": ticker} for ticker in tickers_to_return]
+
+    else: 
+        tickers_to_return = list(c.execute("""SELECT ticker 
+                                              FROM stocks 
+                                              WHERE adjusted >= ? 
+                                              AND adjusted <= ?
+                                              AND industry = ?
+                                              AND date IN (SELECT MAX(date) FROM stocks)""", (lower_bound, higher_bound, industry)))
+
+        tickers_to_return = [ticker[0] for ticker in tickers_to_return]
+        options = [{"label": ticker, "value": ticker} for ticker in tickers_to_return]
 
         
     return options
 
+# Function used for filtering data based on provided date ranges
 @app.callback(
+    # Function used for filtering data based on provided date ranges
     Output('stock_series', 'figure'),
     [
      Input('Ticker', 'value'),

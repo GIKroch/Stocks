@@ -18,10 +18,6 @@ body {
 
 /* Styling dropdown plot choices*/
 
-#Market{
-    padding-top: 15px;
-
-}
 
 #date_range_div{
     padding-top: 15px;
@@ -87,4 +83,26 @@ body {
     padding: 0.75rem;
     
     /* padding-top: 15px; */
+  }
+
+  #slider_output{
+
+    color:white;
+    font-weight: bold;
+    font-size: 150%;
+    padding-top: 20px !important;
+    padding-bottom: 20px !important;
+    background-color: orange;
+    text-align: center;
+  }
+
+  #stock_value_slider{
+      padding-top: 20px !important;
+      padding-bottom: 20px !important;
+
+  }
+
+  #Ticker{
+    padding-top: 20px !important;
+    padding-bottom: 20px !important;
   }
