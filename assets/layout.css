@@ -1,24 +1,13 @@
 body {
-
     background-color: #000033; 
-    color: black
-
 }
 
-/* Styling tabs layout */
-#Dashboard_Tab{
-
-    background-color: orange;
-}
-
-#Portfolio_Tab{
-
+/******************************************************************************************************* Dashboard Tab ************************************************************************/
+#dashboard{
     background-color: orange;
 }
 
 /* Styling dropdown plot choices*/
-
-
 #date_range_div{
     padding-top: 15px;
     padding-bottom: 20px;
@@ -37,8 +26,6 @@ body {
 }
 
 /* Styling measure tables */
-
-
 #tables
 {
     background-color: orange;
@@ -51,39 +38,10 @@ body {
 #table-right
 {
     background-color: #000033;
-    /* border: 1px solid orange; */
     padding: 0.5rem;
     flex-grow: 1;
-    /* color: #fff */
+ 
 }
-
-  /******************************************************************************************* My Portfolio Tab *********************************************************************************************/
-#stocks_interface{
-    display: flex;
-    
-    text-align: center;
-    
-}
-
-#buy_stocks_interface, 
-#sell_stocks_interface{
-    background-color: darkgray;
-    border: 1px solid #000;
-    
-    width: 100%;
-    
-    
-
-}
-.input_field {
-    display: block;
-    margin-right: auto;
-    margin-left: auto;
-    width: 50%;
-    padding: 0.75rem;
-    
-    /* padding-top: 15px; */
-  }
 
   #slider_output{
 
@@ -102,7 +60,17 @@ body {
 
   }
 
-  #Ticker{
+  #ticker{
     padding-top: 20px !important;
     padding-bottom: 20px !important;
   }
+
+/**************************************************************************  Project Description Tab Styling *******************************************************************************/
+#project-description{
+
+background-color: orange;
+}
+
+#description{
+    background-color: white;
+}

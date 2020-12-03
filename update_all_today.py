@@ -108,6 +108,14 @@ def calculate_measures(conn):
     df_biggest_negative_change = df_price_change_7.head(20)
     df_biggest_negative_change.to_sql('biggest_negative_change_in_7_days', conn, if_exists='replace')
 
+    ## SR Last 30 days 
+    df_sr_30 = measures.get_sharpe_ratio_df(df_measures, 30)
+    df_sr_30.to_sql("sharpe_ratio_last_30_days", conn, if_exists = 'replace')
+    
+    ## SR Last 14
+    df_sr_14 = measures.get_sharpe_ratio_df(df_measures, 14)
+    df_sr_14.to_sql("sharpe_ratio_last_14_days", conn, if_exists = 'replace')
+
 
 update_data_today()
 conn = sqlite3.connect("stocks.db")

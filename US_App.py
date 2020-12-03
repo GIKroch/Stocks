@@ -1,6 +1,6 @@
 import sqlite3
 import pandas as pd
-import pandas_datareader.data as web
+# import pandas_datareader.data as web
 import time
 from datetime import datetime, timedelta, date
 import plotly.offline as pyo
@@ -19,7 +19,9 @@ import measures
 ## Connecting to database
 
 ### Check same thread dodane, żeby pozbyć się errora - docelowo dobrze jakby tego nie było
-conn = sqlite3.connect(r"Z:\Stocks\stocks.db", check_same_thread = False)
+# conn = sqlite3.connect(r"Z:\Stocks\stocks.db", check_same_thread = False)
+conn = sqlite3.connect("stocks.db", check_same_thread = False)
+
 c = conn.cursor()
 ## Running an update_data script - all conditions whether the data should be updated are not, are resolved in a script itself
 
@@ -67,9 +69,10 @@ app = dash.Dash(__name__)
 app.layout = html.Div([
 
                         ## Creating separeted tabs 
-                        dcc.Tabs(id='tabs', value='tab-1', children=[
-                            dcc.Tab(id = "Dashboard_Tab", label='Dashboard', value='tab-1'),
-                            dcc.Tab(id = "Portfolio_Tab", label='My Portfolio', value='tab-2'),
+                        dcc.Tabs(id='tabs', value='dashboard', children=[
+                            dcc.Tab(id = "project-description", label='Project Description', value='project-description'),
+                            dcc.Tab(id = "dashboard", label='Dashboard', value='dashboard'),
+                            
                         ]), 
                         html.Div(id='tabs_content') 
     ])
@@ -78,7 +81,7 @@ app.layout = html.Div([
 @app.callback(Output('tabs_content', 'children'),
               [Input('tabs', 'value')])
 def render_content(tab):
-    if tab == 'tab-1':
+    if tab == 'dashboard':
         return html.Div([
                         html.Div([
                             dcc.Dropdown(
@@ -89,7 +92,6 @@ def render_content(tab):
                             value = "All"
                             ),  
 
-                            # html.Div([
                             dcc.RangeSlider(
                             id = 'stock_value_slider',
                             min = 0,
@@ -97,13 +99,11 @@ def render_content(tab):
                             step = 1,
                             value = [0,100]
                             ),
-                            
-                            # ]
-                            # ),                         
+                        
                             html.Div(id='slider_output'), 
                     
                             dcc.Dropdown(
-                            id = 'Ticker'
+                            id = 'ticker'
                             )
 
                         ], id = 'plot_selectors1'), 
@@ -135,52 +135,79 @@ def render_content(tab):
 
                         dcc.Graph(id = "stock_series"),
 
-                        html.Div([
-                            html.Div([
-                                dcc.Dropdown(id = 'ma_buy_sell_type', 
-                                options = [
-                                {'label':"BUY", "value": "BUY"}, 
-                                {'label':"SELL", "value": "SELL"}
-                                ],
-                                value = "BUY"
-                            
-                                ),
-
-                                dash_table.DataTable(
-                                id='ma_buy_sell_table',
-                                columns=None,
-                                data=None,
-                                ), 
-                            ], id = 'table-left'),
-
-                            html.Div([
-                                dcc.Dropdown(id = 'ndays_measure_type', 
-                                        options = [
-                                {'label': 'MAX PCT CHANGE POSITIVE', 'value': 'MAX_PCT_CHANGE_POSITIVE'}, 
-                                {'label': 'MAX_PCT_CHANGE_NEGATIVE', 'value': 'MAX_PCT_CHANGE_NEGATIVE'}, 
-                                {'label': 'CONSTANT_PRICE_DROP_7_DAYS', 'value': 'CONSTANT_PRICE_DROP_7_DAYS'}, 
-                                {'label': 'CONSTANT_PRICE_DROP_4_DAYS', 'value': 'CONSTANT_PRICE_DROP_4_DAYS'}, 
-                                {'label': 'BIGGEST_NEGATIVE_CHANGE_IN_7_DAYS', 'value': 'BIGGEST_NEGATIVE_CHANGE_IN_7_DAYS'},
-                                {'label': 'BIGGEST_NEGATIVE_CHANGE_IN_14_DAYS', 'value': 'BIGGEST_NEGATIVE_CHANGE_IN_14_DAYS'}],
-                                value = "MAX_PCT_CHANGE_POSITIVE"
-                                ), 
-
-                                dash_table.DataTable(
-                                id='ndays_measure_table',
-                                columns=None,
-                                data=None)
-
-                            ], id = 'table-right')
-
-                        ]  , id = "tables")
                         
-                    
+                        html.Div([
+                            dcc.Dropdown(id = 'ma_buy_sell_type', 
+                            options = [
+                            {'label':"BUY", "value": "BUY"}, 
+                            {'label':"SELL", "value": "SELL"}
+                            ],
+                            value = "BUY"
+                        
+                            ),
+
+                            dash_table.DataTable(
+                            id='ma_buy_sell_table',
+                            columns=None,
+                            data=None,
+                            ), 
+                        ], id = 'table-left'),
+
+                        html.Div([
+                            dcc.Dropdown(id = 'ndays_measure_type', 
+                                    options = [
+                            {'label': 'MAX PCT CHANGE POSITIVE', 'value': 'MAX_PCT_CHANGE_POSITIVE'}, 
+                            {'label': 'MAX_PCT_CHANGE_NEGATIVE', 'value': 'MAX_PCT_CHANGE_NEGATIVE'}, 
+                            {'label': 'CONSTANT PRICE DROP 7 DAYS', 'value': 'CONSTANT_PRICE_DROP_7_DAYS'}, 
+                            {'label': 'CONSTANT PRICE DROP 4 DAYS', 'value': 'CONSTANT_PRICE_DROP_4_DAYS'}, 
+                            {'label': 'BIGGEST NEGATIVE CHANGE IN 7 DAYS', 'value': 'BIGGEST_NEGATIVE_CHANGE_IN_7_DAYS'},
+                            {'label': 'BIGGEST NEGATIVE CHANGE IN 14 DAYS', 'value': 'BIGGEST_NEGATIVE_CHANGE_IN_14_DAYS'}, 
+                            {'label': 'SHARPE RATIO LAST 14 DAYS DATA', 'value':'SHARPE_RATIO_LAST_14_DAYS_DATA'}, 
+                            {'label': 'SHARPE RATIO LAST 30 DAYS DATA', 'value':'SHARPE_RATIO_LAST_30_DAYS_DATA'}],
+                            value = "MAX_PCT_CHANGE_POSITIVE"
+                            ), 
+
+                            dash_table.DataTable(
+                            id='ndays_measure_table',
+                            columns=None,
+                            data=None, 
+                            filter_action="native",
+                            sort_action="native",
+                            sort_mode="multi")
+
+                        ], id = 'table-right')
+                          
         ]) 
 
-    elif tab == 'tab-2':
+    elif tab == 'project-description':
         return html.Div([
-                
-        ])
+                dcc.Markdown('''
+                            #### Welcome to my app for the technical analysis of US equities. 
+
+                            When I graduated from my Master's in Data Science in July 2020, I instantly started thinking on how to futher develop my analytical skills. 
+                            Obviously, I'm learning a lot on daily basis working as data analyst in Citi. However, there are so many things one can learn, that it would be a huge loss for me not to take up other chances.  
+                            
+                            To improve analytical skills one needs to get data to practice at. What would be a better source than US stocks market, with high-volume data and millions of practitioners around the world? 
+                            What's exciting about the stock market is its unpredictibility. Sure, there are a lot of strategies and techniques which can help you to earn money on the market. However, you can never be sure of profits. 
+                              
+
+                            I started working on this app to suport my trading on eToro platform. To keep things simple I've focused only on NYSE and NASDAQ equities. 
+
+                            The app has been created in Python, the packages used: 
+                            * Backend:
+                                * Dash - Web App Framework [Dash Home Page](https://plotly.com/dash/)
+                                * Plotly - Interactive Plotting Engine [Plotly Home Page](https://plotly.com/)
+                                * Sqlite3 - As Backend Database 
+                            * Computations: 
+                                * Pandas 
+                                * Numpy 
+                            * Web scraping:
+                                * Selenium 
+                                * Scrapy
+                            
+
+                            ''')
+        ], id = "description")
             
 ########################################################################################## Dashboard functions ######################################################################################
 
@@ -204,7 +231,7 @@ def update_price_slider_output(stock_values):
 
 ## Filtering tickers based on industry choice from first dropdown list and price range slider
 @app.callback(
-    Output("Ticker", "options"), 
+    Output("ticker", "options"), 
     [
         Input("Industry", "value"), 
         Input("stock_value_slider", "value")
@@ -216,7 +243,7 @@ def get_tickers(industry, stock_value_prices):
     higher_bound = stock_value_prices[1]
 
     if industry == "All":
-        # options = [{"label": ticker, "value": ticker} for ticker in all_tickers]
+        
         lower_bound = stock_value_prices[0]
         higher_bound = stock_value_prices[1]
 
@@ -248,7 +275,7 @@ def get_tickers(industry, stock_value_prices):
     # Function used for filtering data based on provided date ranges
     Output('stock_series', 'figure'),
     [
-     Input('Ticker', 'value'),
+     Input('ticker', 'value'),
     Input("date_range", "start_date"), 
     Input("date_range", "end_date"), 
     Input("plot_content", "value")
@@ -381,8 +408,30 @@ def fill_measures(ndays_measure_type):
         columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
         data=df_measures_extracted.to_dict('records')
 
+    elif ndays_measure_type == 'SHARPE_RATIO_LAST_14_DAYS_DATA':
+        df_measures_extracted = pd.read_sql_query("""
+                                                    SELECT 
+                                                    ticker, 
+                                                    sharpe_ratio_last_14_days, 
+                                                    mean_log_returns_last_14_days,
+                                                    volatility_last_14_days 
+                                                    FROM sharpe_ratio_last_14_days""", conn)
+        columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
+        data=df_measures_extracted.to_dict('records')
+    
+    elif ndays_measure_type == 'SHARPE_RATIO_LAST_30_DAYS_DATA':
+        df_measures_extracted = pd.read_sql_query("""
+                                                    SELECT ticker, 
+                                                    sharpe_ratio_last_30_days, 
+                                                    mean_log_returns_last_30_days, 
+                                                    volatility_last_30_days 
+                                                    FROM sharpe_ratio_last_30_days""", conn)
+        columns=[{"name": i, "id": i} for i in df_measures_extracted.columns]
+        data=df_measures_extracted.to_dict('records')
+
     else:
-        pass
+        columns = None
+        data = None
 
     return (columns, data)
 

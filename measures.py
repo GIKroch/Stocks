@@ -108,6 +108,7 @@ def lowest_price_in_ndays(df, ndays):
     df_to_return = df.loc[(df['ticker'].isin(tickers_with_lowest_price)) & (df['date'].isin(dates[0:ndays + 1]))].sort_values(by = ['ticker', 'date'])
     return df_to_return
 
+# Currently not in use
 def first_price_increase(df, ticker, ndays):
 
     
@@ -152,6 +153,7 @@ def first_price_increase(df, ticker, ndays):
     else:
         return None
 
+# Currently not in use
 def first_price_increase_all(df, tickers_trend_change):
 
     for ticker in df['ticker'].unique():
@@ -172,7 +174,7 @@ def biggest_price_change_in_ndays(df, ndays):
             df_ticker = df.loc[df['ticker'] == ticker].copy()
             dates = list(df_ticker['date'].sort_values(ascending = False).unique())
 
-            industry = df_ticker["industry"][0]
+            industry = list(df_ticker["industry"])[0]
             ## Getting latest change in price for the ticker.List of dates is sorted from the latest, then we get the first list element
             most_recent_date = dates[0]
             historical_date = dates[ndays]
@@ -196,3 +198,41 @@ def biggest_price_change_in_ndays(df, ndays):
     df_to_return.sort_values('price_change', inplace = True)
     
     return df_to_return
+
+
+####### SR Calculations
+def get_sharpe_ratio(df, ticker, day_period):
+    
+    df_ticker = pd.DataFrame(df.loc[df["ticker"] == ticker, "adjusted"].copy())
+    df_ticker = df_ticker.tail(day_period).copy()
+    df_ticker['log_return'] = np.log(df_ticker['adjusted']/df_ticker['adjusted'].shift(1))
+    mean_log_return = df_ticker['log_return'].mean()
+    volatility = df_ticker['log_return'].std()
+    sharpe_ratio = np.sqrt(252) * (mean_log_return/volatility)
+    
+    return (sharpe_ratio, mean_log_return, volatility)
+
+
+def get_sharpe_ratio_df(df, day_period):
+    
+    output_dict = {}
+    output_dict['ticker'] = []
+    output_dict["sharpe_ratio_last_" + str(day_period) + "_days"] = []
+    output_dict["mean_log_returns_last_" + str(day_period) + "_days"] = []
+    output_dict["volatility_last_" + str(day_period) + "_days"] = []
+    
+    for ticker in df['ticker'].unique():
+        
+        output_dict['ticker'].append(ticker)
+            
+        sharpe_ratio, mean_log_return, volatility = get_sharpe_ratio(df, ticker, day_period)
+        
+        output_dict["sharpe_ratio_last_" + str(day_period) + "_days"].append(sharpe_ratio)
+        output_dict["mean_log_returns_last_" + str(day_period) + "_days"].append(mean_log_return)
+        output_dict["volatility_last_" + str(day_period) + "_days"].append(volatility)
+    
+    output_df = pd.DataFrame(output_dict)
+    
+    return (output_df)
+    
+    
