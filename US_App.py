@@ -1,3 +1,4 @@
+# coding=utf-8
 import sqlite3
 import pandas as pd
 # import pandas_datareader.data as web
@@ -29,7 +30,7 @@ c = conn.cursor()
 ############################################################################################################# Loading info about industries #######################################################################
 
 ################################ industries
-industries = list(c.execute("SELECT DISTINCT industry FROM stocks"))
+industries = list(c.execute("SELECT DISTINCT industry FROM stocks WHERE industry IS NOT NULL"))
 industries = [industry[0] for industry in industries]
 industries.sort()
 industries.insert(0, "All")
@@ -63,6 +64,9 @@ max_price = list(c.execute("""SELECT MAX(adjusted)
                              WHERE date 
                              IN (SELECT MAX(date) FROM stocks)"""))[0][0]
 
+
+############################################################################################################## Loading Kiplinger's earnings data ################################################
+df_earnings = pd.read_sql_query("SELECT * FROM earnings", conn)
 ############################################################################################################## Dash App ########################################################################################
 
 app = dash.Dash(__name__)
@@ -134,8 +138,19 @@ def render_content(tab):
                         
 
                         dcc.Graph(id = "stock_series"),
+                        html.Div(['This Week Earnings'], className="table_header", ),
+                        html.Div([
+                            dash_table.DataTable(
+                            id="earnings_table", 
+                            columns = [{"name": i, "id": i} for i in df_earnings.columns], 
+                            data=df_earnings.to_dict('records'), 
+                            filter_action="native",
+                            sort_action="native",
+                            sort_mode="multi"
+                        )
+                        ]), 
 
-                        
+                        html.Div(['Moving Average Buy/Sell'], className="table_header", ),
                         html.Div([
                             dcc.Dropdown(id = 'ma_buy_sell_type', 
                             options = [
@@ -151,8 +166,9 @@ def render_content(tab):
                             columns=None,
                             data=None,
                             ), 
-                        ], id = 'table-left'),
+                        ], id = 'ma_table'),
 
+                        html.Div(['Measures'], className="table_header", ),
                         html.Div([
                             dcc.Dropdown(id = 'ndays_measure_type', 
                                     options = [
@@ -175,38 +191,65 @@ def render_content(tab):
                             sort_action="native",
                             sort_mode="multi")
 
-                        ], id = 'table-right')
+                        ], id = 'measures_table')
                           
         ]) 
 
     elif tab == 'project-description':
         return html.Div([
-                dcc.Markdown('''
-                            #### Welcome to my app for the technical analysis of US equities. 
+                dcc.Markdown("""
+## Introduction
 
-                            When I graduated from my Master's in Data Science in July 2020, I instantly started thinking on how to futher develop my analytical skills. 
-                            Obviously, I'm learning a lot on daily basis working as data analyst in Citi. However, there are so many things one can learn, that it would be a huge loss for me not to take up other chances.  
+Welcome to my Python powered web application designed for technical analysis of US market equities. 
+
+When I graduated from my Master's in Data Science in July 2020, I instantly started thinking on how to further develop my analytical skills. I'm learning a lot on daily basis working as a data analyst at Citi. However, there are so many things one can learn, that it would be a huge loss for me not to explore other opportunities. 
                             
-                            To improve analytical skills one needs to get data to practice at. What would be a better source than US stocks market, with high-volume data and millions of practitioners around the world? 
-                            What's exciting about the stock market is its unpredictibility. Sure, there are a lot of strategies and techniques which can help you to earn money on the market. However, you can never be sure of profits. 
-                              
+To grow in the analytical area one needs to get some data to practice at. Hence, the first question I had to ask myself before starting the project was: “Where to look for easily accessible and interesting data?”. The answer was straightforward – US stock market. Why was it so obvious for me? Well, I’ve been interested in the big finance world since childhood but never tried investing. I felt it was the right time to get into a trading path. To be honest, I got so excited about this idea that I couldn’t really resist myself from doing my first transaction. I bought 1 Apple stock through my Polish broker account (7$ fee for each foreign investment!!!) and quickly lost tens of bucks. After I closed the position it became clear that impulsive investing is not the best way to make money on a stock market. I switched to a more reasonable strategy. First, build a technical analysis application, then start making deals based on it. 
 
-                            I started working on this app to suport my trading on eToro platform. To keep things simple I've focused only on NYSE and NASDAQ equities. 
+## Data Sources
+This app has been created for trading on eToro platform. To keep things simple I've focused only on NYSE and NASDAQ equities. The data utilized comes from multiple sources, many of which were parsed with web scraping techniques. Please find the list of sources of specific data attributes below (link to a scraping script attached, if applicable):
+* NYSE/NASDAQ Tickers available to trade on eToro – [eToro Selenium scraping script]()
+* Stock Prices – Obtained from yahoofinance through Pandas Datareader package. 
+* Industrial classification [Scrapy + Selenium scraping script of stockmarketmba.com]()
+* List of companies publishing earning report on a specific week [Scrapy scraping script of kiplinger.com]()
 
-                            The app has been created in Python, the packages used: 
-                            * Backend:
-                                * Dash - Web App Framework [Dash Home Page](https://plotly.com/dash/)
-                                * Plotly - Interactive Plotting Engine [Plotly Home Page](https://plotly.com/)
-                                * Sqlite3 - As Backend Database 
-                            * Computations: 
-                                * Pandas 
-                                * Numpy 
-                            * Web scraping:
-                                * Selenium 
-                                * Scrapy
-                            
+## Functionalities 
+### Current
+* Interactive plots of  equities selected based on industry and price range.
+* Statistics 
+    - price changes 
+    - moving average trend reversal
+    - sharpe ratio
+* List of companies publishing earning reports this week. 
+### Future
+* Monte Carlo Simulation. 
+* Sentiment analysis of stock-related news. Leveraging Twitter and financial sources (Yahoo Finance etc.) scraping. 
+* Machine Learning for prediction of prices. 
 
-                            ''')
+## How does it work? 
+The app presented here, on heroku, is based on a snapshot of database, updated monthly. The reason is the size of database which is too large to receive updates more often. 
+
+At my private desktop the app's database is updated daily during a working week. The update process is handled by my Raspberry Pi 4, which serves also as a network drive. Therefore, when the app is run from my desktop it can always access the most recent data. 
+
+## Technology
+The app has been created in Python, the packages used: 
+* Backend:
+    * Dash – Web interface
+    * Plotly – Plotting interface
+    * Sqlite3 – Database
+* Computations: 
+    * Pandas 
+    * Numpy 
+* Web scraping:
+    * Selenium 
+    * Scrapy
+
+## Useful links
+* Source code [Github Repository]()
+* [My LinkedIn](https://www.linkedin.com/in/grzegorz-krochmal-bb33691ab/)
+
+
+                            """, id="description_text")
         ], id = "description")
             
 ########################################################################################## Dashboard functions ######################################################################################
@@ -285,7 +328,7 @@ def get_plot(ticker, start_date, end_date, plot_content):
 
     ## Checking what additional plot elements have been chosen and applying functions to achieve proper visualisation
 
-    df = pd.read_sql_query("""SELECT date, ticker, open, high, low, close, "adjusted" FROM stocks WHERE ticker = ?""", conn, params = (ticker,))
+    df = pd.read_sql_query("""SELECT date, ticker, adjusted FROM stocks WHERE ticker = ?""", conn, params = (ticker,))
 
     df.sort_values(by = ['date'], inplace = True)
     ## Calculating moving averages, before date filtering is imposed

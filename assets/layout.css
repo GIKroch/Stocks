@@ -24,21 +24,13 @@ body {
     padding-bottom: 15px;
     border: 2px solid orange;
 }
-
-/* Styling measure tables */
-#tables
-{
-    background-color: orange;
-    border: 1px solid #000;
-    padding: 0.5rem;
-    display: flex;
-  }
   
-#table-left,
-#table-right
+#ma_table,
+#measures_table, 
+#earnings_table
 {
     background-color: #000033;
-    padding: 0.5rem;
+    padding: 1rem;
     flex-grow: 1;
  
 }
@@ -65,6 +57,10 @@ body {
     padding-bottom: 20px !important;
   }
 
+  #stock_series{
+    padding-bottom: 10px;
+  }
+
 /**************************************************************************  Project Description Tab Styling *******************************************************************************/
 #project-description{
 
@@ -72,5 +68,27 @@ background-color: orange;
 }
 
 #description{
-    background-color: white;
+    background-color: lightgray;
+    text-align: justify;
+    margin-left: 5%;
+    margin-right: 5%;
+
+}
+
+#description_text{
+
+  margin-left: 10px;
+  margin-right: 10px;
+}
+
+.table_header{
+
+  background-color: orange;
+  color:white;
+  height: 150%;
+  text-align: center;
+  padding: 1rem;
+  font-weight: bold;
+  font-size: 120%
+
 }

@@ -16,7 +16,8 @@ def get_data(ticker, market, industry, start, end, conn):
     df["ticker"] = ticker
     df["market"] = market
     df["industry"] = industry
-    df = df.loc[:,["ticker", 'market', 'industry', 'date', 'high', 'low', 'open', 'close', 'adjusted', 'volume']]
+    # df = df.loc[:,["ticker", 'market', 'industry', 'date', 'high', 'low', 'open', 'close', 'adjusted', 'volume']]
+    df = df.loc[:,["ticker", 'market', 'industry', 'date', 'adjusted']]
     
     
     df.to_sql("stocks", conn, if_exists='append', index = False)
@@ -38,17 +39,33 @@ def update_data_today():
                                         market TEXT,
                                         industry TEXT, 
                                         date DATE, 
-                                        high REAL, 
-                                        low REAL, 
-                                        open REAL,
-                                        close REAL,
-                                        adjusted REAL,
-                                        volume REAL 
-                                        
+                                        adjusted REAL
                                         ) """)
         conn.commit()
 
-        etoro_stocks = pd.read_excel("etoro_stocks.xlsx")
+        etoro_stocks = pd.read_sql_query("""
+        
+                                        WITH etoro AS(
+                                        SELECT 
+                                            ticker, 
+                                            market 
+                                        FROM etoro_stocks
+                                        ), industry AS(
+                                        SELECT
+                                            ticker, 
+                                            gics_sector AS industry
+                                        FROM 
+                                            industries
+                                        )
+                                        SELECT
+                                        etoro.ticker, 
+                                        etoro.market, 
+                                        industry.industry
+                                        FROM 
+                                        etoro
+                                        LEFT JOIN
+                                        industry ON etoro.ticker = industry.ticker
+        """, conn)
         
         
 

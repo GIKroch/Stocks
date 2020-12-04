@@ -12,12 +12,12 @@ class EarningsSpider(scrapy.Spider):
 
         for day, table in zip(week_days, response.xpath("//div[@class='polaris__table']")):
             
-            for tr in table.xpath("//tbody//tr[position()>1]"):
+            for tr in table.xpath(".//tbody//tr[position()>1]"):
 
                 yield {
-                    'day': day, 
-                    'company': tr.xpath(".//td[1]/text()").get(), 
                     'ticker': tr.xpath(".//td[2]/a/text()").get(),
+                    'company': tr.xpath(".//td[1]/text()").get(), 
+                    'day': day, 
                     'earnings_estimate': tr.xpath(".//td[3]/text()").get()
                 }
-            
+        

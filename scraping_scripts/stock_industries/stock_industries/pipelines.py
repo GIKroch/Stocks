@@ -23,7 +23,6 @@ class SQLitePipeline(object):
         root_directory = os.path.dirname(os.path.realpath(current_directory)).rsplit(os.sep, 1)[0]
 
         db_directory = root_directory + "\\stocks.db"
-        print("DB DIRECTORY PIPELING: ", db_directory)
         self.conn = sqlite3.connect(db_directory)
         self.c = self.conn.cursor()
         
