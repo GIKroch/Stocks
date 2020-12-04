@@ -1,7 +1,9 @@
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 import time
 import pandas as pd
 import sqlite3
+import os
 
 def get_tickers_by_market(driver, market):
     
@@ -13,8 +15,6 @@ def get_tickers_by_market(driver, market):
     cont = True
     
     while cont == True:
-        
-       
         
         print('working')
         
@@ -51,30 +51,10 @@ def get_tickers_by_industry(driver):
     for industry in industries:
       
         # First we need to overpass login page, which loads for all links except markets (such as nasdaq)
-        driver.get("https://www.etoro.com/discover/markets/stocks/exchange/{}".format('nasdaq'))
-        driver.maximize_window()
-        
+        driver.get("https://www.etoro.com/discover/markets/stocks/industry/{}".format(industry))
         time.sleep(5)
-        markets_button = driver.find_element_by_xpath("//a[@href='/discover/markets']")
-        markets_button.click()
-        
-        time.sleep(2)
-        menu_stocks = driver.find_element_by_xpath("//a[@id='menu-list-stocks']")
-        menu_stocks.click()
-        
-        time.sleep(2)
-        industry_list = driver.find_element_by_xpath("//div[contains(text(),'Industry')]")
-        industry_list.click()
-        
-        time.sleep(2)
-        industry_href_link = "/discover/markets/stocks/industry/{}".format(industry)
-        get_to_industry = driver.find_element_by_xpath("//a[@href='{}']".format(industry_href_link))
-        get_to_industry.click()
     
         print("\n", industry)
-        time.sleep(5)
-
-        
 
         cont = True
 
@@ -113,10 +93,19 @@ def get_tickers_by_industry(driver):
 
 def get_final_etoro_list():
     
-    ## Moving output database from excel file to app database
+    # Migrating from excel database to app database
 
-    conn = sqlite3.connect()
-    driver = webdriver.Chrome()
+    ## Getting Current directory 
+    current_directory = os.getcwd()
+    root_directory = os.path.dirname(os.path.realpath(current_directory))
+    db_directory = root_directory + "\\stocks.db"
+    print(db_directory)
+    conn = sqlite3.connect(db_directory)
+
+    ## Initiating driver
+    options = Options()
+    options.add_argument("--headless")
+    driver = webdriver.Chrome(chrome_options=options)
     
     ## Getting stocks based on market origin
     stocks_nasdaq = get_tickers_by_market(driver, 'nasdaq')
@@ -144,9 +133,8 @@ def get_final_etoro_list():
     
     df_industry = pd.DataFrame(industry_tickers_flat, columns = ['ticker', 'industry'])
     
-    
     df_final = df_stocks_markets.merge(df_industry, how = 'left', on = 'ticker')
-    
-    df_final.to_excel('etoro_stocks.xlsx', index = False)
+    df_final.reset_index(inplace = True, drop = True)
+    df_final.to_sql('etoro_stocks', conn, if_exists = 'replace')
 
 get_final_etoro_list()
