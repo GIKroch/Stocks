@@ -1,7 +1,6 @@
 from selenium import webdriver
 import time
 import pandas as pd
-import sqlite3
 
 def get_tickers_by_market(driver, market):
     
@@ -113,9 +112,6 @@ def get_tickers_by_industry(driver):
 
 def get_final_etoro_list():
     
-    ## Moving output database from excel file to app database
-
-    conn = sqlite3.connect()
     driver = webdriver.Chrome()
     
     ## Getting stocks based on market origin
