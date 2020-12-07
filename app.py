@@ -228,7 +228,7 @@ This app has been created for trading on eToro platform. To keep things simple I
 * Machine Learning for prediction of prices. 
 
 ## How does it work? 
-The app presented here, on Heroku, is based on a snapshot of a database (3rd of December 2020). Due to a size-limitation, the data only covers records from 1st of January 2018. The app's code repository is available at [GitHub](https://github.com/GIKroch/Stocks). The repository is bonded with Heroku. 
+The app presented here, on Heroku, is based on a snapshot of a database (3rd of December 2020). Due to a size-limitation, the data covers records starting from 1st of January 2018. The app's code repository is available at [GitHub](https://github.com/GIKroch/Stocks). The repository is bonded with Heroku. 
 
 At my private desktop the app's database is updated daily during a working week. The update process is handled by my Raspberry Pi 4, which serves also as a network drive. Therefore, when the app is run from my desktop it can always access the most recent data. 
 
@@ -246,7 +246,7 @@ The app has been created in Python, the packages used:
     * Scrapy
 
 ## Useful links
-* Source code [Github Repository](https://github.com/GIKroch/Stocks)
+* [App Github Repository](https://github.com/GIKroch/Stocks)
 * [My LinkedIn](https://www.linkedin.com/in/grzegorz-krochmal-bb33691ab/)
 
 
