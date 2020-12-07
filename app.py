@@ -70,6 +70,7 @@ df_earnings = pd.read_sql_query("SELECT * FROM earnings", conn)
 ############################################################################################################## Dash App ########################################################################################
 
 app = dash.Dash(__name__)
+server = app.server
 app.layout = html.Div([
 
                         ## Creating separeted tabs 
