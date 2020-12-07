@@ -1,5 +1,4 @@
 ## Introduction
-
 Welcome to my Python powered web application designed for technical analysis of US market equities. 
 
 When I graduated from my Master's in Data Science in July 2020, I instantly started thinking on how to further develop my analytical skills. I'm learning a lot on daily basis working as a data analyst at Citi. However, there are so many things one can learn, that it would be a huge loss for me not to explore other opportunities. 
@@ -8,10 +7,10 @@ To grow in the analytical area one needs to get some data to practice at. Hence,
 
 ## Data Sources
 This app has been created for trading on eToro platform. To keep things simple I've focused only on NYSE and NASDAQ equities. The data utilized comes from multiple sources, many of which were parsed with web scraping techniques. Please find the list of sources of specific data attributes below (link to a scraping script attached, if applicable):
-* NYSE/NASDAQ Tickers available to trade on eToro – [eToro Selenium scraping script]()
+* NYSE/NASDAQ Tickers available to trade on eToro – [eToro Selenium scraping script](https://github.com/GIKroch/Stocks/blob/main/scraping_scripts/get_etoro_tickers.py)
 * Stock Prices – Obtained from yahoofinance through Pandas Datareader package. 
-* Industrial classification [Scrapy + Selenium scraping script of stockmarketmba.com]()
-* List of companies publishing earning report on a specific week [Scrapy scraping script of kiplinger.com]()
+* Industrial classification [Scrapy + Selenium scraping script of stockmarketmba.com](https://github.com/GIKroch/Stocks/tree/main/scraping_scripts/stock_industries)
+* List of companies publishing earning report on a specific week [Scrapy scraping script of kiplinger.com](https://github.com/GIKroch/Stocks/tree/main/scraping_scripts/kiplinger_earnings/kiplinger_earnings)
 
 ## Functionalities 
 ### Current
@@ -27,7 +26,7 @@ This app has been created for trading on eToro platform. To keep things simple I
 * Machine Learning for prediction of prices. 
 
 ## How does it work? 
-The app presented here, on heroku, is based on a snapshot of database, updated monthly. The reason is the size of database which is too large to receive updates more often. 
+The app presented here, on Heroku, is based on a snapshot of database (3rd of December 2020). Due to size-limitation, the data only covers records from 1st of January 2018. The app code repository is available at [GitHub](https://github.com/GIKroch/Stocks). The repository is bonded with Heroku. 
 
 At my private desktop the app's database is updated daily during a working week. The update process is handled by my Raspberry Pi 4, which serves also as a network drive. Therefore, when the app is run from my desktop it can always access the most recent data. 
 
@@ -43,3 +42,7 @@ The app has been created in Python, the packages used:
 * Web scraping:
     * Selenium 
     * Scrapy
+
+## Useful links
+* Source code [Github Repository](https://github.com/GIKroch/Stocks)
+* [My LinkedIn](https://www.linkedin.com/in/grzegorz-krochmal-bb33691ab/)
