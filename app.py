@@ -21,7 +21,7 @@ import measures
 
 ### Check same thread dodane, żeby pozbyć się errora - docelowo dobrze jakby tego nie było
 # conn = sqlite3.connect(r"Z:\Stocks\stocks.db", check_same_thread = False)
-conn = sqlite3.connect("stocks.db", check_same_thread = False)
+conn = sqlite3.connect("stocks_light.db", check_same_thread = False)
 
 c = conn.cursor()
 ## Running an update_data script - all conditions whether the data should be updated are not, are resolved in a script itself
